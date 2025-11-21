@@ -134,7 +134,7 @@ namespace QuaternionUtility
         }
 
 
-        public QuaternionUtils FromEulerZYX(VectorUtils3D eulerZYX)
+        public static QuaternionUtils FromEulerZYX(VectorUtils3D eulerZYX)
         {
 
 

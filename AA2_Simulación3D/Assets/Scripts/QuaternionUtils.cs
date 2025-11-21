@@ -15,11 +15,9 @@ namespace QuaternionUtility
         float j;
         float k;
 
-        const float epsilon = 0.01f;
+        
 
-        public const float Degree2Rad = MathF.PI / 180f;
-
-        public const float Rad2Deg = 57.29578f;
+       
 
         public QuaternionUtils()
         {
@@ -166,7 +164,7 @@ namespace QuaternionUtility
             // Pitch (y-axis rotation)
             float sinp = +2.0f * (q.w * q.j - q.k * q.i);
             if (System.MathF.Abs(sinp) >= 1)
-                output.y = CopySign(VectorUtils3D.PI / 2, sinp); // use 90 degrees if out of range
+                output.y = CopySign(MathFUtils.PI / 2, sinp); // use 90 degrees if out of range
             else
                 output.y = System.MathF.Asin(sinp);
 
@@ -303,7 +301,7 @@ namespace QuaternionUtility
             float sinHalfTheta = System.MathF.Sqrt(1.0f - cosHalfTheta * cosHalfTheta);
             // If theta = 180 degrees then result is not fully defined
             // We could rotate around any axis normal to q1 or q2
-            if (System.MathF.Abs(sinHalfTheta) < epsilon)
+            if (System.MathF.Abs(sinHalfTheta) < MathFUtils.epsilon)
             {
                 result.w = (w * 0.5f + q.w * 0.5f);
                 result.i = (i * 0.5f + q.i * 0.5f);

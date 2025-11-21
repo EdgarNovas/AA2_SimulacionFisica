@@ -6,7 +6,7 @@ using System.Numerics;
 public class VectorUtils3D
 {
     public float x, y, z;
-    public static float PI = 3.14159265359f;
+    
 
     public VectorUtils3D(float x, float y, float z)
     {
@@ -96,7 +96,7 @@ public class VectorUtils3D
             return 0;
         }
 
-        return (float)System.MathF.Acos(dot / (magnitudA * magnitudB)) * (180f / PI);
+        return (float)System.MathF.Acos(dot / (magnitudA * magnitudB)) * (180f / MathFUtils.PI);
     }
 
     public VectorPolarUtils3D ConvertToSpherical()

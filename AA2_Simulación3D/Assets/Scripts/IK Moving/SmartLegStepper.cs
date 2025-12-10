@@ -3,114 +3,139 @@ using UnityEngine;
 
 public class SmartLegStepper : MonoBehaviour
 {
+    [Header("Identificación (0:Izq, 1:Der)")]
+    public int legID = 0;
+
     [Header("Referencias")]
-    public Transform ikTarget;    // La esfera roja
-    public Transform body;        // La pelvis
+    public Transform ikTarget;
+    public Transform body;
 
     [Header("Configuración")]
     public float stepDistance = 0.5f;
     public float stepHeight = 0.3f;
-    public float stepSpeed = 4.0f;
+    public float stepSpeed = 6.0f;    // Un poco más rápido para que no arrastre
+    public bool dynamicSpeed = true;
 
-    [Header("Posición Relativa")]
-    // X: Lado (0.3 Derecha, -0.3 Izquierda)
-    // Z: Adelante (0 normalmente)
-    public Vector3 defaultOffset = new Vector3(0.3f, 0, 0);
+    [Header("Posición Relativa (VectorUtils3D)")]
+    // IMPORTANTE: X es el ancho. (0.3 Derecha, -0.3 Izquierda)
+    public VectorUtils3D defaultOffset = new VectorUtils3D(0.3f, 0, 0);
     public float floorY = 0.0f;
 
-    private Vector3 lastBodyPos;
-    private Vector3 currentVelocity;
+    // Internas
+    private VectorUtils3D lastBodyPos;
+    private VectorUtils3D currentVelocity;
     private bool isMoving = false;
 
     void Start()
     {
-        lastBodyPos = body.position;
+        // Auto-detectar suelo si se te olvida configurarlo
+        if (floorY == 0.0f) floorY = ikTarget.position.y;
+
+        lastBodyPos = VectorUtils3D.ToVectorUtils3D(body.position);
+        currentVelocity = new VectorUtils3D(0, 0, 0);
     }
 
     void Update()
     {
-        // 1. Calcular Velocidad Real (Hacia donde se mueve el cuerpo)
-        Vector3 displacement = body.position - lastBodyPos;
-        currentVelocity = displacement / Time.deltaTime;
-        lastBodyPos = body.position;
+        // 1. Calcular velocidad
+        VectorUtils3D currentBodyPos = VectorUtils3D.ToVectorUtils3D(body.position);
+        VectorUtils3D displacement = currentBodyPos - lastBodyPos;
+        float invDt = 1.0f / Time.deltaTime;
+        currentVelocity = displacement * invDt;
+        lastBodyPos = currentBodyPos;
 
         if (isMoving) return;
 
-        // 2. Calcular dónde debería estar el pie
-        Vector3 idealPos = CalculateIdealPosition();
+        // 2. Calcular posición ideal (Raíles)
+        VectorUtils3D idealPos = CalculateIdealPosition();
+
+        // Posición actual proyectada al suelo
+        VectorUtils3D currentTargetPos = VectorUtils3D.ToVectorUtils3D(ikTarget.position);
+        currentTargetPos.y = floorY;
 
         // 3. Comprobar distancia
-        float dist = Vector3.Distance(new Vector3(ikTarget.position.x, floorY, ikTarget.position.z), idealPos);
+        float dist = VectorUtils3D.Distance(currentTargetPos, idealPos);
 
         if (dist > stepDistance)
         {
-            // 4. PREGUNTAR AL MANAGER: ¿Puedo moverme?
-            // Si el Manager no existe (olvidaste ponerlo), se mueve igual.
-            if (WalkManager.Instance == null || WalkManager.Instance.RequestStep())
+            // Pedir turno (Lógica que funcionaba bien)
+            if (WalkManager.Instance == null || WalkManager.Instance.RequestStep(legID))
             {
-                // Predicción: Lanzar el pie un poco más lejos en la dirección del movimiento
-                Vector3 targetPos = idealPos + (currentVelocity.normalized * (stepDistance * 0.4f));
+                // --- EL ARREGLO PARA QUE NO VAYAN AL CENTRO ---
+
+                // Antes calculábamos la predicción sumando velocidad pura.
+                // Ahora forzamos que el destino respete el ancho (Offset X).
+
+                // Paso 1: Predicción hacia ADELANTE (Dirección del cuerpo o velocidad)
+                VectorUtils3D forwardPrediction = currentVelocity * (stepDistance * 0.5f);
+
+                // Paso 2: Sumar la predicción al punto ideal (que ya tiene el ancho aplicado)
+                VectorUtils3D targetPos = idealPos + forwardPrediction;
+
+                // Paso 3: Asegurar suelo
                 targetPos.y = floorY;
 
-                StartCoroutine(MoveLeg(targetPos));
+                StartCoroutine(MoveLeg(targetPos, dist));
             }
         }
     }
 
-    Vector3 CalculateIdealPosition()
+    VectorUtils3D CalculateIdealPosition()
     {
-        // Posición base al lado del cuerpo
-        Vector3 sidePos = body.position + (body.right * defaultOffset.x);
+        // Calculamos el punto lateral exacto usando la derecha del cuerpo
+        VectorUtils3D bodyRight = VectorUtils3D.ToVectorUtils3D(body.right);
+        VectorUtils3D bodyPos = VectorUtils3D.ToVectorUtils3D(body.position);
 
-        // Si nos movemos, alineamos el "ideal" con la dirección del movimiento
-        // Si estamos quietos, usamos la rotación del cuerpo
-        if (currentVelocity.magnitude > 0.1f)
-        {
-            // Opcional: Girar un poco el offset basándose en la velocidad
-            // Pero para simplificar, mantenemos el offset lateral relativo al cuerpo
-            // y la posición Z relativa a la velocidad no afecta tanto aquí.
-        }
+        // Esto mantiene el "Raíl": Siempre a X distancia del centro del cuerpo
+        VectorUtils3D lateralOffset = bodyRight * defaultOffset.x;
 
-        Vector3 finalPos = sidePos;
+        // Sumamos un poco de offset Z para que el punto de reposo no sea tan atrás
+        VectorUtils3D bodyFwd = VectorUtils3D.ToVectorUtils3D(body.forward);
+        VectorUtils3D forwardOffset = bodyFwd * defaultOffset.z;
+
+        VectorUtils3D finalPos = bodyPos + lateralOffset + forwardOffset;
         finalPos.y = floorY;
         return finalPos;
     }
 
-    IEnumerator MoveLeg(Vector3 destination)
+    IEnumerator MoveLeg(VectorUtils3D destination, float distanceToTravel)
     {
         isMoving = true;
-        Vector3 startPos = ikTarget.position;
+        VectorUtils3D startPos = VectorUtils3D.ToVectorUtils3D(ikTarget.position);
         float t = 0f;
+
+        // Velocidad
+        float actualSpeed = stepSpeed;
+        if (dynamicSpeed && distanceToTravel > stepDistance * 1.5f)
+        {
+            actualSpeed *= 1.5f;
+        }
 
         while (t < 1f)
         {
-            t += Time.deltaTime * stepSpeed;
+            t += Time.deltaTime * actualSpeed;
+            if (t > 1f) t = 1f;
 
-            Vector3 currentPos = Vector3.Lerp(startPos, destination, t);
-            float height = Mathf.Sin(t * Mathf.PI) * stepHeight;
+            // Interpolación Lineal
+            VectorUtils3D currentPos = startPos.LERP(destination, t);
+
+            // Arco Seno
+            float height = System.MathF.Sin(t * MathFUtils.PI) * stepHeight;
             currentPos.y = floorY + height;
 
-            ikTarget.position = currentPos;
+            ikTarget.position = new Vector3(currentPos.x, currentPos.y, currentPos.z);
             yield return null;
         }
 
-        ikTarget.position = destination;
-
+        // Aterrizaje
+        ikTarget.position = new Vector3(destination.x, destination.y, destination.z);
         isMoving = false;
 
-        // 5. AVISAR AL MANAGER: He terminado, que pase el siguiente
         if (WalkManager.Instance != null)
         {
             WalkManager.Instance.FinishStep();
         }
     }
 
-    void OnDrawGizmos()
-    {
-        if (body == null) return;
-        Gizmos.color = Color.blue;
-        Vector3 ideal = body.position + (body.right * defaultOffset.x);
-        ideal.y = floorY;
-        Gizmos.DrawWireSphere(ideal, 0.1f);
-    }
+
 }

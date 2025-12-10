@@ -673,10 +673,10 @@ MonoBehaviour:
   - {fileID: 892323707}
   - {fileID: 892323708}
   target: {fileID: 1726613621}
-  learningRate: 80
+  learningRate: 100
   samplingDistance: 0.1
   minDistance: 0.05
-  iterations: 20
+  iterations: 21
   invertKnee: 0
 --- !u!114 &1726613623
 MonoBehaviour:
@@ -690,13 +690,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91ed91608c1ccf9429018190c99755c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  legID: 0
   ikTarget: {fileID: 1726613621}
   body: {fileID: 892323711}
-  stepDistance: 0.3
+  stepDistance: 0.5
   stepHeight: 0.5
   stepSpeed: 6
-  defaultOffset: {x: -0.3, y: 0.17, z: 0.39}
-  floorY: 0.18
+  dynamicSpeed: 0
+  floorY: 0.15
 --- !u!4 &1753698086 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5591475200727627595, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
@@ -719,7 +720,7 @@ GameObject:
   - component: {fileID: 1966599631}
   - component: {fileID: 1966599630}
   m_Layer: 0
-  m_Name: RightFootPlacement (1)
+  m_Name: RightFootPlacement
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -734,7 +735,7 @@ Transform:
   m_GameObject: {fileID: 1966599628}
   serializedVersion: 2
   m_LocalRotation: {x: 0.9063079, y: 0, z: 0, w: 0.42261827}
-  m_LocalPosition: {x: 5.176, y: 0, z: 10.69}
+  m_LocalPosition: {x: 5.176, y: 0.224, z: 10.893}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -752,13 +753,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91ed91608c1ccf9429018190c99755c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  legID: 1
   ikTarget: {fileID: 1966599629}
   body: {fileID: 892323711}
-  stepDistance: 0.3
+  stepDistance: 0.5
   stepHeight: 0.5
   stepSpeed: 6
-  defaultOffset: {x: 0.3, y: 0, z: 0}
-  floorY: 0.18
+  dynamicSpeed: 0
+  floorY: 0.15
 --- !u!114 &1966599631
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -776,62 +778,11 @@ MonoBehaviour:
   - {fileID: 302354340}
   - {fileID: 1753698086}
   target: {fileID: 1966599629}
-  learningRate: 10
-  samplingDistance: 0.05
+  learningRate: 100
+  samplingDistance: 0.1
   minDistance: 0.05
-  iterations: 16
+  iterations: 21
   invertKnee: 0
---- !u!1 &2093800953
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2093800955}
-  - component: {fileID: 2093800954}
-  m_Layer: 0
-  m_Name: LegStepperManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &2093800954
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2093800953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fccb167385121b4bbd7b191763bfb0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ikTarget: {fileID: 1726613621}
-  body: {fileID: 892323711}
-  stepDistance: 0.5
-  stepHeight: 0.3
-  stepSpeed: 3
-  offsetFromBody: {x: -0.15, y: 0, z: 0.4}
-  floorY: 0.17
---- !u!4 &2093800955
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2093800953}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -843,5 +794,4 @@ SceneRoots:
   - {fileID: 1243429407}
   - {fileID: 1726613621}
   - {fileID: 1966599629}
-  - {fileID: 2093800955}
   - {fileID: 635321931}

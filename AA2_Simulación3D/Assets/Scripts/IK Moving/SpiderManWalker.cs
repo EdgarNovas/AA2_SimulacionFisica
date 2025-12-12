@@ -38,7 +38,7 @@ public class SpiderManWalker : MonoBehaviour
             q.AssignFromUnityQuaternion(joints[i].localRotation);
             initialRotations[i] = q;
 
-            // 2. Calcular el offset LOCAL usando TU librería matemática
+            // 2. Calcular el offset LOCAL
             if (i < joints.Count - 1)
             {
                 // A) Obtener posiciones convertidas a VectorUtils3D

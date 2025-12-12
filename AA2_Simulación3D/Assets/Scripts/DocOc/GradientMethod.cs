@@ -31,6 +31,12 @@ public class GradientMethod : MonoBehaviour
     // Auxiliar para crear cuaterniones sin instanciar tanto
     private QuaternionUtils qUtilsHelper = new QuaternionUtils();
 
+    // --- DATOS INTERNOS ---
+    public VectorUtils3D bendAxis = new VectorUtils3D(1, 0, 0);
+    private float[] angles;
+    private QuaternionUtils[] initialRotations;
+    private VectorUtils3D[] localBoneOffsets; // Offset calculado con TU librería
+
     void Start()
     {
         // 1. Inicializar Theta (3 ángulos por joint)
@@ -58,6 +64,57 @@ public class GradientMethod : MonoBehaviour
             theta[i * 3 + 1] = euler.y * Mathf.Deg2Rad;
             theta[i * 3 + 2] = euler.z * Mathf.Deg2Rad;
         }
+
+        angles = new float[joints.Count];
+        initialRotations = new QuaternionUtils[joints.Count];
+        localBoneOffsets = new VectorUtils3D[joints.Count - 1];
+
+        for (int i = 0; i < joints.Count; i++)
+        {
+            // 1. Guardar rotación inicial usando TU clase
+            QuaternionUtils q = new QuaternionUtils();
+            q.AssignFromUnityQuaternion(joints[i].localRotation);
+            initialRotations[i] = q;
+
+            // 2. Calcular el offset LOCAL
+            if (i < joints.Count - 1)
+            {
+                // A) Obtener posiciones convertidas a VectorUtils3D
+                VectorUtils3D p1 = VectorUtils3D.ToVectorUtils3D(joints[i].position);
+                VectorUtils3D p2 = VectorUtils3D.ToVectorUtils3D(joints[i + 1].position);
+
+                // B) Calcular vector del hueso en el mundo (Resta de tus vectores)
+                VectorUtils3D worldDelta = p2 - p1;
+
+                // C) Obtener la rotación GLOBAL del padre para deshacerla
+                // Necesitamos la inversa para pasar de Mundo a Local
+                QuaternionUtils parentGlobalRot = new QuaternionUtils();
+                parentGlobalRot.AssignFromUnityQuaternion(joints[i].rotation);
+
+                // D) Rotación Inversa manual (Conjugado)
+                // Para rotar un vector "hacia atrás", usamos el conjugado del cuaternión
+                // localDelta = Inverse(Rotation) * worldDelta
+                VectorUtils3D localDelta = InverseRotate(parentGlobalRot, worldDelta);
+
+                localBoneOffsets[i] = localDelta;
+            }
+        }
+    }
+
+    VectorUtils3D InverseRotate(QuaternionUtils q, VectorUtils3D v)
+    {
+        // El inverso de un cuaternión de rotación unitario es su conjugado.
+        // Como no sé si tu librería tiene 'Conjugate' o acceso a w,x,y,z públicos,
+        // usamos un truco: Unity nos da el inverso, lo convertimos a TU clase y rotamos.
+        // (Esto mantiene la matemática pura en tu clase QuaternionUtils.Rotate)
+
+        Quaternion unityQ = q.GetAsUnityQuaternion();
+        Quaternion unityInverse = Quaternion.Inverse(unityQ);
+
+        QuaternionUtils qInv = new QuaternionUtils();
+        qInv.AssignFromUnityQuaternion(unityInverse);
+
+        return qInv.Rotate(v);
     }
 
     void Update()
@@ -77,6 +134,8 @@ public class GradientMethod : MonoBehaviour
 
         // Aplicamos la FK manual a los objetos de Unity
         ForwardKinematics();
+
+        GetDistanceAndDebug(true);
     }
 
     // --- FUNCIONES CORE ---
@@ -205,5 +264,48 @@ public class GradientMethod : MonoBehaviour
             theta[i] = old;
         }
         return gradient;
+    }
+
+    float GetDistanceAndDebug(bool drawGizmos)
+    {
+        // Todo aquí es VectorUtils3D
+        VectorUtils3D currentPos = VectorUtils3D.ToVectorUtils3D(joints[0].position);
+
+        QuaternionUtils accRot = new QuaternionUtils();
+        if (joints[0].parent != null)
+            accRot.AssignFromUnityQuaternion(joints[0].parent.rotation);
+        else
+            accRot.AssignFromUnityQuaternion(Quaternion.identity);
+
+        for (int i = 0; i < joints.Count - 1; i++)
+        {
+            QuaternionUtils baseLocal = new QuaternionUtils(initialRotations[i]);
+
+            QuaternionUtils ikBend = new QuaternionUtils();
+            if (bendAxis.x == 1) ikBend.FromXRotation(angles[i] * MathFUtils.Degree2Rad);
+            else if (bendAxis.z == 1) ikBend.FromZRotation(angles[i] * MathFUtils.Degree2Rad);
+            else ikBend.FromYRotation(angles[i] * MathFUtils.Degree2Rad);
+
+            baseLocal.Multiply(ikBend);
+            accRot.Multiply(baseLocal);
+
+            // Operación vectorial PURA con tu librería
+            VectorUtils3D rotatedOffset = accRot.Rotate(localBoneOffsets[i]);
+
+            if (drawGizmos)
+            {
+                // Solo convertimos al final para pintar
+                Vector3 s = new Vector3(currentPos.x, currentPos.y, currentPos.z);
+                Vector3 e = new Vector3(currentPos.x + rotatedOffset.x, currentPos.y + rotatedOffset.y, currentPos.z + rotatedOffset.z);
+                Debug.DrawLine(s, e, Color.yellow);
+            }
+
+            currentPos = currentPos + rotatedOffset;
+        }
+
+        VectorUtils3D targetPos = VectorUtils3D.ToVectorUtils3D(target.position);
+
+        // Distancia calculada con TU librería
+        return VectorUtils3D.Distance(currentPos, targetPos);
     }
 }

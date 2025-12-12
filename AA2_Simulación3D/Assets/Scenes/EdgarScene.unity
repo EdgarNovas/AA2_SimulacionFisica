@@ -142,7 +142,7 @@ MonoBehaviour:
   - {fileID: 390935269}
   - {fileID: 425193372}
   - {fileID: 558465676}
-  speed: 5
+  speed: 15
   threshold: 0.2
 --- !u!1 &280850545
 GameObject:

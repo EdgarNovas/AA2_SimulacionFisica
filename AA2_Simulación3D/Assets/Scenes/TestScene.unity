@@ -571,9 +571,9 @@ MonoBehaviour:
   - {fileID: 2082521234}
   - {fileID: 627828938}
   target: {fileID: 427600828}
-  alpha: 0.1
-  tolerance: 0.001
-  maxStepPerJoint: 0.05
+  alpha: 0.007
+  tolerance: 1
+  maxStepPerJoint: 0.03
 --- !u!1 &1411621046
 GameObject:
   m_ObjectHideFlags: 0

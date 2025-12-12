@@ -142,7 +142,7 @@ MonoBehaviour:
   - {fileID: 390935269}
   - {fileID: 425193372}
   - {fileID: 558465676}
-  speed: 15
+  speed: 10
   threshold: 0.2
 --- !u!1 &280850545
 GameObject:
@@ -171,7 +171,7 @@ Transform:
   m_GameObject: {fileID: 280850545}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -2.18, z: 6.64}
+  m_LocalPosition: {x: 0, y: -2.545, z: 6.64}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -262,7 +262,7 @@ Transform:
   m_GameObject: {fileID: 390935268}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -43.366, y: -2.18, z: 30.37}
+  m_LocalPosition: {x: -43.366, y: -2.545, z: 30.37}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -485,7 +485,7 @@ Transform:
   m_GameObject: {fileID: 425193371}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -43.366, y: -2.18, z: -19}
+  m_LocalPosition: {x: -43.366, y: -2.545, z: -19}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -571,7 +571,7 @@ Transform:
   m_GameObject: {fileID: 558465675}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.83, y: -2.18, z: -17.084}
+  m_LocalPosition: {x: 1.83, y: -2.545, z: -17.084}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -724,7 +724,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.16
+      value: 0.159
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1102,10 +1102,10 @@ MonoBehaviour:
   ikTarget: {fileID: 1726613621}
   body: {fileID: 892323711}
   stepDistance: 0.5
-  stepHeight: 0.5
+  stepHeight: 0
   stepSpeed: 6
   dynamicSpeed: 0
-  floorY: 0.15
+  floorY: 0
 --- !u!4 &1753698086 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5591475200727627595, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
@@ -1165,10 +1165,10 @@ MonoBehaviour:
   ikTarget: {fileID: 1966599629}
   body: {fileID: 892323711}
   stepDistance: 0.5
-  stepHeight: 0.5
+  stepHeight: 0
   stepSpeed: 6
   dynamicSpeed: 0
-  floorY: 0.15
+  floorY: 0
 --- !u!114 &1966599631
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1218,7 +1218,7 @@ Transform:
   m_GameObject: {fileID: 2106452113}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -2.18, z: 30.37}
+  m_LocalPosition: {x: 0, y: -2.545, z: 30.37}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []

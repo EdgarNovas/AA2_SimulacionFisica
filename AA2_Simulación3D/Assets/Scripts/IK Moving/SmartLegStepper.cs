@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using QuaternionUtility;
 
 public class SmartLegStepper : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class SmartLegStepper : MonoBehaviour
     // IMPORTANTE: X es el ancho. (0.3 Derecha, -0.3 Izquierda)
     public VectorUtils3D defaultOffset = new VectorUtils3D(0.3f, 0, 0);
     public float floorY = 0.0f;
+
+    [Header("Corrección de Rotación para el pie")]
+    // Si están del revés, prueba (0, 180, 0). Si miran de lado, (0, 90, 0).
+    public Vector3 rotationOffset = new Vector3(0, 180, 0);
 
     // Internas
     private VectorUtils3D lastBodyPos;
@@ -102,6 +107,25 @@ public class SmartLegStepper : MonoBehaviour
     {
         isMoving = true;
         VectorUtils3D startPos = VectorUtils3D.ToVectorUtils3D(ikTarget.position);
+
+        // NUEVO: Guardamos la rotación inicial del pie y la final (la del cuerpo)
+        QuaternionUtils startRot = new QuaternionUtils();
+        startRot.AssignFromUnityQuaternion(ikTarget.rotation);
+
+        QuaternionUtils bodyRot = new QuaternionUtils();
+        bodyRot.AssignFromUnityQuaternion(body.rotation);
+
+        // Convertimos el offset (0, 180, 0) a Quaternion
+        QuaternionUtils correctionUnity = new QuaternionUtils();
+        VectorUtils3D rotOffset = new VectorUtils3D();
+        rotOffset.AssignFromUnityVector(rotationOffset);
+        correctionUnity = correctionUnity.Euler(rotOffset);
+
+
+
+        QuaternionUtils endRot = new QuaternionUtils(bodyRot);
+        endRot.Multiply(correctionUnity);
+
         float t = 0f;
 
         // Velocidad
@@ -124,11 +148,17 @@ public class SmartLegStepper : MonoBehaviour
             currentPos.y = floorY + height;
 
             ikTarget.position = new Vector3(currentPos.x, currentPos.y, currentPos.z);
+
+            // Usamos Slerp (Spherical Lerp) para que la rotación sea suave
+            
+            ikTarget.rotation = QuaternionUtils.Slerp(startRot, endRot, t).ToUnityQuaternion();
+
             yield return null;
         }
 
         // Aterrizaje
         ikTarget.position = new Vector3(destination.x, destination.y, destination.z);
+        ikTarget.rotation = endRot.ToUnityQuaternion();
         isMoving = false;
 
         if (WalkManager.Instance != null)

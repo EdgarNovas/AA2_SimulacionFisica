@@ -1106,6 +1106,7 @@ MonoBehaviour:
   stepSpeed: 6
   dynamicSpeed: 0
   floorY: 0
+  rotationOffset: {x: -35, y: 180, z: 180}
 --- !u!4 &1753698086 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5591475200727627595, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
@@ -1169,6 +1170,7 @@ MonoBehaviour:
   stepSpeed: 6
   dynamicSpeed: 0
   floorY: 0
+  rotationOffset: {x: -35, y: 180, z: 180}
 --- !u!114 &1966599631
 MonoBehaviour:
   m_ObjectHideFlags: 0

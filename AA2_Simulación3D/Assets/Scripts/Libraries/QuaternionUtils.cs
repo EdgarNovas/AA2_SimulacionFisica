@@ -176,6 +176,51 @@ namespace QuaternionUtility
             return output;
         }
 
+        /// <summary>
+        /// Crea una rotación a partir de ángulos Euler (en grados).
+        /// El orden de aplicación es Z, luego X, luego Y (convención común de Unity) o Z-Y-X según preferencia.
+        /// Aquí utilizamos la implementación estándar Z-Y-X (Yaw-Pitch-Roll) consistente con tu código actual.
+        /// </summary>
+        /// <param name="euler">Vector con ángulos en grados (x, y, z)</param>
+        /// <returns>Quaternion resultante</returns>
+        public QuaternionUtils Euler(VectorUtils3D euler)
+        {
+            // 1. Convertir grados a radianes
+            // Usamos 0.0174532925f que es aproximadamente (PI / 180)
+            float toRad = MathFUtils.PI / 180f;
+
+            float radX = euler.x * toRad;
+            float radY = euler.y * toRad;
+            float radZ = euler.z * toRad;
+
+            // 2. Calcular senos y cosenos de los ángulos medios
+            float cX = System.MathF.Cos(radX * 0.5f);
+            float sX = System.MathF.Sin(radX * 0.5f);
+
+            float cY = System.MathF.Cos(radY * 0.5f);
+            float sY = System.MathF.Sin(radY * 0.5f);
+
+            float cZ = System.MathF.Cos(radZ * 0.5f);
+            float sZ = System.MathF.Sin(radZ * 0.5f);
+
+            QuaternionUtils q = new QuaternionUtils();
+
+            // 3. Calcular los componentes del Quaternion
+            // Fórmula para orden de rotación Z-Y-X (Yaw -> Pitch -> Roll)
+            q.w = cZ * cY * cX + sZ * sY * sX;
+            q.i = cZ * cY * sX - sZ * sY * cX;
+            q.j = cZ * sY * cX + sZ * cY * sX;
+            q.k = sZ * cY * cX - cZ * sY * sX;
+
+            return q;
+        }
+
+       
+        public QuaternionUtils Euler(float x, float y, float z)
+        {
+            return Euler(new VectorUtils3D(x, y, z));
+        }
+
         public float Dot(QuaternionUtils q)
         {
             return w * q.w + i * q.i + j * q.j + k * q.k;
@@ -318,6 +363,59 @@ namespace QuaternionUtility
                 result.j = (j * ratioA + q.j * ratioB);
                 result.k = (k * ratioA + q.k * ratioB);
             }
+            return result;
+        }
+
+        public static QuaternionUtils Slerp(QuaternionUtils a, QuaternionUtils b, float t)
+        {
+            QuaternionUtils result = new QuaternionUtils();
+
+            // 1. Calcular el producto punto (Coseno del ángulo)
+            // Esto nos dice cuánto se parecen las dos rotaciones
+            float cosHalfTheta = a.w * b.w + a.i * b.i + a.j * b.j + a.k * b.k;
+
+            // Si el producto punto es negativo, significa que el camino "corto" es invertir uno de los dos.
+            // Si no hacemos esto, a veces la rotación da la vuelta larga (360 grados) en vez de la corta.
+            if (cosHalfTheta < 0.0f)
+            {
+                // Invertimos b (temporalmente) para ir por el camino corto
+                // Hacemos una copia para no modificar el objeto original 'b' si es una clase
+                b = new QuaternionUtils(-b.w, -b.i, -b.j, -b.k);
+                cosHalfTheta = -cosHalfTheta;
+            }
+            // ----------------------------------------
+
+            // 2. Si son iguales (o casi), devolvemos A
+            if (System.MathF.Abs(cosHalfTheta) >= 1.0f)
+            {
+                return a;
+            }
+
+            // 3. Cálculos trigonométricos
+            float halfTheta = System.MathF.Acos(cosHalfTheta);
+            float sinHalfTheta = System.MathF.Sqrt(1.0f - cosHalfTheta * cosHalfTheta);
+
+            // 4. Evitar división por cero (Singularidad de 180 grados)
+            if (System.MathF.Abs(sinHalfTheta) < MathFUtils.epsilon)
+            {
+                // Interpolación lineal simple si el ángulo es muy pequeño
+                result.w = (a.w * 0.5f + b.w * 0.5f);
+                result.i = (a.i * 0.5f + b.i * 0.5f);
+                result.j = (a.j * 0.5f + b.j * 0.5f);
+                result.k = (a.k * 0.5f + b.k * 0.5f);
+            }
+            else
+            {
+                // 5. Fórmula estándar de Slerp
+                float ratioA = System.MathF.Sin((1f - t) * halfTheta) / sinHalfTheta;
+                float ratioB = System.MathF.Sin(t * halfTheta) / sinHalfTheta;
+
+                result.w = (a.w * ratioA + b.w * ratioB);
+                result.i = (a.i * ratioA + b.i * ratioB);
+                result.j = (a.j * ratioA + b.j * ratioB);
+                result.k = (a.k * ratioA + b.k * ratioB);
+            }
+
             return result;
         }
 

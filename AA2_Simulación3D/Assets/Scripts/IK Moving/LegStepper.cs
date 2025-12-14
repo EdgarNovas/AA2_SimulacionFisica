@@ -4,10 +4,10 @@ using UnityEngine;
 public class LegStepper : MonoBehaviour
 {
     [Header("Asignaciones")]
-    public Transform ikTarget;    // La esfera roja
-    public Transform body;        // La pelvis del personaje
+    public Transform ikTarget;    
+    public Transform body;       
 
-    [Header("Configuración Fácil")]
+    [Header("Configuración fácil")]
     public float stepDistance = 0.6f; // Distancia para dar el paso
     public float stepHeight = 0.3f;   // Altura que levanta el pie
     public float stepSpeed = 3.0f;    // Velocidad del paso
@@ -15,7 +15,7 @@ public class LegStepper : MonoBehaviour
     [Header("Posición Ideal")]
     // Ajusta esto: X es lado, Z es adelante/atrás
     public Vector3 offsetFromBody = new Vector3(0.3f, 0, 0.2f);
-    public float floorY = 0.0f; // La altura del suelo (casi siempre 0)
+    public float floorY = 0.0f; // La altura del suelo
 
     private bool isMoving = false;
 

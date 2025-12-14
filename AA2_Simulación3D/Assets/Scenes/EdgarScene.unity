@@ -758,6 +758,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -2327721599956945682, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b0098eb4feb74ca4680c764e18b32799, type: 2}
     - target: {fileID: 919132149155446097, guid: 047954827560a7149aace3e29ad4a1f5, type: 3}
       propertyPath: m_Name
       value: spiderman
@@ -1084,7 +1088,7 @@ MonoBehaviour:
   learningRate: 100
   samplingDistance: 0.1
   minDistance: 0.05
-  iterations: 5
+  iterations: 21
   invertKnee: 0
 --- !u!114 &1726613623
 MonoBehaviour:
@@ -1102,10 +1106,10 @@ MonoBehaviour:
   ikTarget: {fileID: 1726613621}
   body: {fileID: 892323711}
   stepDistance: 0.5
-  stepHeight: 0
+  stepHeight: 0.7
   stepSpeed: 6
   dynamicSpeed: 0
-  floorY: 0
+  floorY: 0.24
   rotationOffset: {x: -35, y: 180, z: 180}
 --- !u!4 &1753698086 stripped
 Transform:
@@ -1166,10 +1170,10 @@ MonoBehaviour:
   ikTarget: {fileID: 1966599629}
   body: {fileID: 892323711}
   stepDistance: 0.5
-  stepHeight: 0
+  stepHeight: 0.7
   stepSpeed: 6
   dynamicSpeed: 0
-  floorY: 0
+  floorY: 0.24
   rotationOffset: {x: -35, y: 180, z: 180}
 --- !u!114 &1966599631
 MonoBehaviour:

@@ -12,16 +12,15 @@ public class WalkManager : MonoBehaviour
         Instance = this;
     }
 
-    // Ahora pedimos permiso con el DNI (ID) de la pierna
+    // Ahora pedimos permiso con el ID de la pierna
     public bool RequestStep(int legID)
     {
-        // 1. Si alguien se está moviendo, NADIE puede moverse
+        // Si alguien se está moviendo no se pueden mover mas piernas
         if (isAnyLegMoving) return false;
 
-        // 2. Si TÚ fuiste el último en moverte, NO puedes repetir. Deja al otro.
+        // Si esta pierna fue la ultima en moverse no puede repetir
         if (legID == lastLegID) return false;
 
-        // Si pasamos los filtros, concedemos el permiso
         isAnyLegMoving = true;
         lastLegID = legID;
         return true;

@@ -145,4 +145,14 @@ public class FollowSpiderman : MonoBehaviour
         // Aplicar rotación solo al pivot
         bodyPivot.rotation = currentRotation.GetAsUnityQuaternion();
     }
+
+    public VectorUtils3D GetVelocity()
+    {
+        return velocity;
+    }
+
+    public float GetMaxSpeed()
+    {
+        return maxSpeed;
+    }
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using QuaternionUtility;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 public class GradientMethod : MonoBehaviour
 {
@@ -92,10 +93,18 @@ public class GradientMethod : MonoBehaviour
         {
             float delta = Mathf.Clamp(step[i], -maxStepPerJoint, maxStepPerJoint);
             theta[i] -= delta;
+
+            theta[i] = ClampAngle(theta[i], -10, 10);
         }
 
         // Aplicamos la FK manual a los objetos de Unity
         ForwardKinematics();
+    }
+
+    float ClampAngle(float angle, float min, float max)
+    {
+        angle = Mathf.Repeat(angle + 180f, 360f) - 180f;
+        return Mathf.Clamp(angle, min, max);
     }
 
     // --- FUNCIONES CORE ---

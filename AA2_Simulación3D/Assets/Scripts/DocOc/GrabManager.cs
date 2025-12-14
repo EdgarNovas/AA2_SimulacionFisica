@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ChaseManager : MonoBehaviour
+public class GrabManager : MonoBehaviour
 {
     public Transform spiderman;
     public Transform idleTarget;

@@ -269,7 +269,17 @@ namespace QuaternionUtility
             return result;
         }
 
+        public VectorUtils3D InverseRotate(VectorUtils3D v)
+        {
+            QuaternionUtils inv = new QuaternionUtils(
+                w,
+               -i,
+               -j,
+               -k
+            );
 
+            return inv.Rotate(v);
+        }
 
         public void Print()
         {

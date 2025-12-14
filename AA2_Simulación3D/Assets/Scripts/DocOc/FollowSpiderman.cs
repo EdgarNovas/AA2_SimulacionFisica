@@ -117,8 +117,11 @@ public class FollowSpiderman : MonoBehaviour
 
         if (speedFactor > 0.01f)
         {
-            // Convertir velocidad al espacio local
-            Vector3 localVel = bodyPivot.InverseTransformDirection(velocity.GetAsUnityVector());
+            // Convertir velocidad a espacio local del pivot
+            QuaternionUtils pivotRotation = new QuaternionUtils();
+            pivotRotation.AssignFromUnityQuaternion(bodyPivot.rotation);
+
+            VectorUtils3D localVel = pivotRotation.InverseRotate(velocity);
 
             // Calculamos inclinación proporcional a la velocidad
             float tiltAmount = maxTiltAngle * speedFactor * Mathf.Deg2Rad;

@@ -2,6 +2,7 @@ using UnityEngine;
 using QuaternionUtility;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 public class GradientMethod : MonoBehaviour
 {
@@ -31,6 +32,7 @@ public class GradientMethod : MonoBehaviour
     // Auxiliar para crear cuaterniones sin instanciar tanto
     private QuaternionUtils qUtilsHelper = new QuaternionUtils();
 
+
     void Start()
     {
         // 1. Inicializar Theta (3 ángulos por joint)
@@ -44,20 +46,38 @@ public class GradientMethod : MonoBehaviour
         localOffsets = new VectorUtils3D[joints.Count - 1];
         for (int i = 0; i < joints.Count - 1; i++)
         {
-            Vector3 worldDiff = joints[i + 1].position - joints[i].position;
+            VectorUtils3D worldDiff = VectorUtils3D.ToVectorUtils3D(joints[i + 1].position - joints[i].position);
             // Guardamos el offset relativo a la rotación inicial del padre
-            Vector3 localOff = Quaternion.Inverse(joints[i].rotation) * worldDiff;
-            localOffsets[i] = VectorUtils3D.ToVectorUtils3D(localOff);
+            QuaternionUtils rotationQuat = new QuaternionUtils();
+            rotationQuat.AssignFromUnityQuaternion(joints[i].rotation);
+            VectorUtils3D localOff = InverseRotate(rotationQuat, worldDiff);
+            localOffsets[i] = localOff;
         }
 
         // 3. Copiar rotación inicial (Bind Pose)
         for (int i = 0; i < joints.Count; i++)
         {
-            Vector3 euler = joints[i].localEulerAngles;
+            VectorUtils3D euler = VectorUtils3D.ToVectorUtils3D(joints[i].localEulerAngles);
             theta[i * 3 + 0] = euler.x * Mathf.Deg2Rad;
             theta[i * 3 + 1] = euler.y * Mathf.Deg2Rad;
             theta[i * 3 + 2] = euler.z * Mathf.Deg2Rad;
         }
+    }
+
+    VectorUtils3D InverseRotate(QuaternionUtils q, VectorUtils3D v)
+    {
+        // El inverso de un cuaternión de rotación unitario es su conjugado.
+        // Como no sé si tu librería tiene 'Conjugate' o acceso a w,x,y,z públicos,
+        // usamos un truco: Unity nos da el inverso, lo convertimos a TU clase y rotamos.
+        // (Esto mantiene la matemática pura en tu clase QuaternionUtils.Rotate)
+
+        Quaternion unityQ = q.GetAsUnityQuaternion();
+        Quaternion unityInverse = Quaternion.Inverse(unityQ);
+
+        QuaternionUtils qInv = new QuaternionUtils();
+        qInv.AssignFromUnityQuaternion(unityInverse);
+
+        return qInv.Rotate(v);
     }
 
     void Update()
@@ -73,10 +93,18 @@ public class GradientMethod : MonoBehaviour
         {
             float delta = Mathf.Clamp(step[i], -maxStepPerJoint, maxStepPerJoint);
             theta[i] -= delta;
+
+            theta[i] = ClampAngle(theta[i], -10, 10);
         }
 
         // Aplicamos la FK manual a los objetos de Unity
         ForwardKinematics();
+    }
+
+    float ClampAngle(float angle, float min, float max)
+    {
+        angle = Mathf.Repeat(angle + 180f, 360f) - 180f;
+        return Mathf.Clamp(angle, min, max);
     }
 
     // --- FUNCIONES CORE ---

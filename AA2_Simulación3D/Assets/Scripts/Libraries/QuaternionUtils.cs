@@ -314,7 +314,17 @@ namespace QuaternionUtility
             return result;
         }
 
+        public VectorUtils3D InverseRotate(VectorUtils3D v)
+        {
+            QuaternionUtils inv = new QuaternionUtils(
+                w,
+               -i,
+               -j,
+               -k
+            );
 
+            return inv.Rotate(v);
+        }
 
         public void Print()
         {
@@ -334,6 +344,16 @@ namespace QuaternionUtility
 
             // Based on http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/index.htm
             float cosHalfTheta = w * q.w + i * q.i + j * q.j + k * q.k;
+
+            // Force shortest path
+            if (cosHalfTheta < 0f)
+            {
+                q.w = -q.w;
+                q.i = -q.i;
+                q.j = -q.j;
+                q.k = -q.k;
+                cosHalfTheta = -cosHalfTheta;
+            }
 
             // if q1=q2 or qa=-q2 then theta = 0 and we can return qa
             if (System.MathF.Abs(cosHalfTheta) >= 1.0)

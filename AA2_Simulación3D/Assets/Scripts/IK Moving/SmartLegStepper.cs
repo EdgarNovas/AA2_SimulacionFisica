@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using QuaternionUtility;
 
 public class SmartLegStepper : MonoBehaviour
 {
@@ -21,14 +22,17 @@ public class SmartLegStepper : MonoBehaviour
     public VectorUtils3D defaultOffset = new VectorUtils3D(0.3f, 0, 0);
     public float floorY = 0.0f;
 
-    // Internas
+    [Header("Corrección de Rotación para el pie")]
+    public Vector3 rotationOffset = new Vector3(0, 180, 0);
+
+   
     private VectorUtils3D lastBodyPos;
     private VectorUtils3D currentVelocity;
     private bool isMoving = false;
 
     void Start()
     {
-        // Auto-detectar suelo si se te olvida configurarlo
+        
         if (floorY == 0.0f) floorY = ikTarget.position.y;
 
         lastBodyPos = VectorUtils3D.ToVectorUtils3D(body.position);
@@ -37,7 +41,8 @@ public class SmartLegStepper : MonoBehaviour
 
     void Update()
     {
-        // 1. Calcular velocidad
+        //Velocity manual
+        // Calcular velocidad
         VectorUtils3D currentBodyPos = VectorUtils3D.ToVectorUtils3D(body.position);
         VectorUtils3D displacement = currentBodyPos - lastBodyPos;
         float invDt = 1.0f / Time.deltaTime;
@@ -46,33 +51,29 @@ public class SmartLegStepper : MonoBehaviour
 
         if (isMoving) return;
 
-        // 2. Calcular posición ideal (Raíles)
+        //  Calcular posición ideal
         VectorUtils3D idealPos = CalculateIdealPosition();
 
         // Posición actual proyectada al suelo
         VectorUtils3D currentTargetPos = VectorUtils3D.ToVectorUtils3D(ikTarget.position);
         currentTargetPos.y = floorY;
 
-        // 3. Comprobar distancia
+        // Comprobar distancia
         float dist = VectorUtils3D.Distance(currentTargetPos, idealPos);
 
         if (dist > stepDistance)
         {
-            // Pedir turno (Lógica que funcionaba bien)
+            // Pedir turno al WalkManager
             if (WalkManager.Instance == null || WalkManager.Instance.RequestStep(legID))
             {
-                // --- EL ARREGLO PARA QUE NO VAYAN AL CENTRO ---
 
-                // Antes calculábamos la predicción sumando velocidad pura.
-                // Ahora forzamos que el destino respete el ancho (Offset X).
-
-                // Paso 1: Predicción hacia ADELANTE (Dirección del cuerpo o velocidad)
+                //  Predicción hacia adelante
                 VectorUtils3D forwardPrediction = currentVelocity * (stepDistance * 0.5f);
 
-                // Paso 2: Sumar la predicción al punto ideal (que ya tiene el ancho aplicado)
+                //Sumar la predicción al punto ideal
                 VectorUtils3D targetPos = idealPos + forwardPrediction;
 
-                // Paso 3: Asegurar suelo
+                // Posicion del suelo
                 targetPos.y = floorY;
 
                 StartCoroutine(MoveLeg(targetPos, dist));
@@ -86,10 +87,10 @@ public class SmartLegStepper : MonoBehaviour
         VectorUtils3D bodyRight = VectorUtils3D.ToVectorUtils3D(body.right);
         VectorUtils3D bodyPos = VectorUtils3D.ToVectorUtils3D(body.position);
 
-        // Esto mantiene el "Raíl": Siempre a X distancia del centro del cuerpo
+        // Esto mantiene a X distancia del centro del cuerpo
         VectorUtils3D lateralOffset = bodyRight * defaultOffset.x;
 
-        // Sumamos un poco de offset Z para que el punto de reposo no sea tan atrás
+        // Sumo un poco de offset Z para que el punto de reposo no sea atrás
         VectorUtils3D bodyFwd = VectorUtils3D.ToVectorUtils3D(body.forward);
         VectorUtils3D forwardOffset = bodyFwd * defaultOffset.z;
 
@@ -102,6 +103,27 @@ public class SmartLegStepper : MonoBehaviour
     {
         isMoving = true;
         VectorUtils3D startPos = VectorUtils3D.ToVectorUtils3D(ikTarget.position);
+
+        // Esto hace que nuestro pie se alinee junto con el cuerpo
+
+        // Guardamos la rotación inicial del pie y la final la del cuerpo
+        QuaternionUtils startRot = new QuaternionUtils();
+        startRot.AssignFromUnityQuaternion(ikTarget.rotation);
+
+        QuaternionUtils bodyRot = new QuaternionUtils();
+        bodyRot.AssignFromUnityQuaternion(body.rotation);
+
+        // Convertimos el offset a Quaternion
+        QuaternionUtils correctionUnity = new QuaternionUtils();
+        VectorUtils3D rotOffset = new VectorUtils3D();
+        rotOffset.AssignFromUnityVector(rotationOffset);
+        correctionUnity = correctionUnity.Euler(rotOffset);
+
+
+
+        QuaternionUtils endRot = new QuaternionUtils(bodyRot);
+        endRot.Multiply(correctionUnity);
+
         float t = 0f;
 
         // Velocidad
@@ -124,11 +146,17 @@ public class SmartLegStepper : MonoBehaviour
             currentPos.y = floorY + height;
 
             ikTarget.position = new Vector3(currentPos.x, currentPos.y, currentPos.z);
+
+            // Usamos Slerp (Spherical Lerp) para que la rotación sea suave
+            
+            ikTarget.rotation = QuaternionUtils.Slerp(startRot, endRot, t).ToUnityQuaternion();
+
             yield return null;
         }
 
         // Aterrizaje
         ikTarget.position = new Vector3(destination.x, destination.y, destination.z);
+        ikTarget.rotation = endRot.ToUnityQuaternion();
         isMoving = false;
 
         if (WalkManager.Instance != null)
